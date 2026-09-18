@@ -2,10 +2,17 @@
   "schemaVersion": 1,
   "name": "commercetracker",
   "displayName": "Commerce Tracker",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "category": "經商",
   "description": "經商追蹤：特產包比率、售價、材料成本與利潤",
   "changelog": [
+    {
+      "version": "1.0.2",
+      "date": "2026-09-19",
+      "notes": [
+        "GitHub 專案名稱加入 archerage-addon- 前綴，更新文件連結；本機插件資料夾名稱保持不變"
+      ]
+    },
     {
       "version": "1.0.1",
       "date": "2026-09-19",
