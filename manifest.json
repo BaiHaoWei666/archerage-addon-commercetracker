@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "name": "commercetracker",
+  "displayName": "Commerce Tracker",
+  "version": "1.0.1",
+  "category": "經商",
+  "description": "經商追蹤：特產包比率、售價、材料成本與利潤",
+  "changelog": [
+    {
+      "version": "1.0.1",
+      "date": "2026-09-19",
+      "notes": [
+        "拆分為獨立公開專案，建立測試與 Release 封裝流程",
+        "整理操作說明、開發規範與更新發布方式",
+        "維持開發中狀態，尚未收錄於管理器"
+      ]
+    },
+    {
+      "version": "1.0.0",
+      "date": "2026-09-17",
+      "notes": [
+        "首次透過安裝工具發佈"
+      ]
+    }
+  ],
+  "files": [
+    "*.lua",
+    "toc.g",
+    "common/",
+    "windows/",
+    "README.md",
+    "COPYRIGHT.md",
+    "data/",
+    "icons/"
+  ]
+}
