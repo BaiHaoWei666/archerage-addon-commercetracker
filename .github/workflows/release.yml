@@ -1,0 +1,43 @@
+name: 檢查與發布插件
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -r scripts/test-requirements.txt
+      - run: python scripts/test.py
+      - name: 核對發布版本
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          python -c 'import json,os; m=json.load(open("manifest.json")); assert os.environ["GITHUB_REF_NAME"] == "v"+m["version"], "Tag 與 manifest 版本不一致"'
+      - run: python scripts/build-release.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: addon-release
+          path: dist/
+  release:
+    if: startsWith(github.ref, 'refs/tags/')
+    needs: test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: addon-release
+          path: dist/
+      - name: 發布附件
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: gh release create "$GITHUB_REF_NAME" dist/* --verify-tag --title "$GITHUB_REF_NAME" --generate-notes

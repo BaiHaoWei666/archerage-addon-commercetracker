@@ -1,0 +1,5 @@
+/dist/
+/.venv/
+/version.txt
+/.luarc.jsonc
+__pycache__/

@@ -1,53 +1,51 @@
 # Commerce Tracker（經商追蹤）
 
-Folio105 的重寫版：選路線，查看每個特產包的比率、售價，以及製作材料的成本和利潤。介面沿用 Folio105。
+**開發中，尚未收錄於插件管理器。** 本 repo 公開提供開發與測試，完成後再發布供一般玩家使用的版本。
 
-## 與 Folio105 的差異
+本插件以 Folio105 為基礎重寫，保留其介面概念、部分資料及圖示。維護者已取得原作者授權；來源與授權紀錄見 [COPYRIGHT.md](COPYRIGHT.md)。
 
-- **材料用 API 讀取**：包的物品編號 → `X2Craft:GetCraftTypeByItemType` → `X2Craft:GetCraftMaterialInfo`，材料名稱和數量跟隨遊戲資料與語系，不需要翻譯表。
-- 材料行顯示為 `材料名 x數量`。
-- 售價一律按最高新鮮度計算（沒有切換按鈕）。
-- 查價時只取名稱相符的拍賣結果；非賣品（`data/zones.lua` 的 `CT.AUCTION_EXCLUDED_ITEMS`）不查，成本算 0。
-- 設定用 `ADDON:SaveData` 存檔（依角色），不寫文字檔。
-- 只支援中文與英文介面。
-- 不要和 Folio105 同時啟用（兩者會同時送出路線查詢；本插件會忽略不是自己送出的結果）。
+## 目前功能
 
-## 使用
+- 選擇大陸、起始區域與交貨區域，查詢特產路線比率。
+- 使用遊戲 API 取得配方材料，依拍賣查價估算成本與利潤。
+- 依最高新鮮度計算售價，收藏常用路線。
+- 設定透過遊戲插件存檔 API 保存，支援中文與英文介面。
 
-以下以繁體中文說明操作；遊戲內實際顯示的中文文字使用簡體中文。
+功能仍在驗證中，價格資料及計算結果不應視為已完成校準。
 
-- 畫面上的小圖示：點一下開關主視窗，拖曳可移動。
-- 下方依序選擇 大陸 → 起始區域 → 交貨區域，就會查詢路線比率（5 秒冷卻，冷卻中選單與重新整理停用）。
-- 「查價」：依序查詢目前所有特產材料的拍賣單價（每 1.2 秒一筆），再按一次停止。
-- 「收藏」：右側收藏欄，「+ 加入目前路線」收藏，點路線套用，× 刪除。
+## 測試操作
 
-## 售價
+將本 repo 放在 `Addon/commercetracker/`，或建立指向本開發目錄的 Junction，於遊戲中啟用。不要與 Folio105 同時啟用，以免同時送出路線查詢。
 
-`售價 = 基礎售價 × 比率 × (1 + 經商熟練度 × 0.05 / 10000) × 新鮮度倍率`
+點畫面小圖示開關主視窗，拖曳可移動。依序選擇大陸、起始區域、交貨區域；路線查詢有五秒冷卻。「查價」依序查詢材料拍賣單價，再按一次停止。「收藏」可加入、套用及刪除路線。
 
-- 基礎售價：`data/prices.lua`（沿用 Folio105 的實測資料），以英文包名對應。
-  - 特產包：配方編號 → `data/specialties.lua` 的英文名稱。
-  - 其他包（發酵品、商會包）：配方資料裡沒有編號，沿用 Folio105 的名稱判斷（中文用關鍵字 + 起始區域組出英文名稱）。
-- 新鮮度倍率：`data/zones.lua`（豪華 1.30、高級 1.15、商業 1.05、保存 1.03；送到希德瑪一律 1.30）。
+遊戲內中文使用簡體；本文件與開發說明使用繁體。
 
-## 檔案
+## 資料與程式
 
-| 檔案 | 內容 |
+售價計算使用基礎售價、路線比率、經商熟練度與新鮮度倍率。基礎價格位於 `data/prices.lua`，地區及倍率位於 `data/zones.lua`；這些資料仍需實機核對。
+
+| 路徑 | 用途 |
 |---|---|
-| `core.lua` | 命名空間 `CT`、共用函式 |
-| `locale.lua` | 中英文文字 `CT.Text(key)` |
-| `data/zones.lua` | 大陸、區域（英文名稱、包等級）、新鮮度倍率、非賣品 |
-| `data/specialties.lua` | 特產配方編號 → 英文名稱 |
-| `data/prices.lua` | 基礎售價 |
-| `trade.lua` | 路線比率查詢、包的辨識與售價 |
-| `auction.lua` | 材料拍賣查價佇列 |
-| `settings.lua` | 存檔：開關按鈕位置、收藏路線 |
-| `windows/widgets.lua` | 共用元件：金額顯示、下拉選單、重新整理按鈕 |
-| `windows/main_window.lua` | 主視窗 |
-| `windows/favorites.lua` | 收藏側欄 |
-| `windows/toggle_button.lua` | 開關按鈕 |
-| `main.lua` | 進入點（含重新載入時的初始化） |
-| `common/` | 通用視窗函式（`CreateEmptyWindow`、`SettingWindowSkin`） |
-| `icons/` | 圖示（取自 Folio105） |
+| `toc.g`、`main.lua` | 載入順序與初始化 |
+| `trade.lua`、`auction.lua` | 路線、售價與拍賣查價 |
+| `data/` | 地區、特產與價格資料 |
+| `windows/` | 主視窗、收藏及開關按鈕 |
+| `settings.lua`、`locale.lua` | 設定及遊戲文字 |
+| `manifest.json` | 版本、介紹、更新紀錄與封裝白名單 |
 
-存檔 key：`commercetracker_settings`。元件名稱皆以 `ct` 開頭。
+設定 key 保持 `commercetracker_settings`。
+
+## 開發與發布
+
+這是獨立 Git repo，可保留在管理器的 `addons/commercetracker/` 開發。提交與推送在本目錄執行。
+
+```powershell
+python -m pip install -r scripts/test-requirements.txt
+./scripts/test.ps1
+python scripts/build-release.py
+```
+
+目前自動檢查為 Lua 5.1 語法及封裝內容驗證，尚無涵蓋經商行為的回歸測試。遊戲行為需另行實測。
+
+push main／PR 會執行 CI 並保留封裝產物；完成測試並準備公開發布後，更新 manifest 版本與 changelog，再推送單一 `v<版本>` tag。workflow 會核對版本並發布 ZIP、manifest、說明及圖示。建立 repo 或通過 CI 不代表已正式發布，也不會自動加入管理器清單。
