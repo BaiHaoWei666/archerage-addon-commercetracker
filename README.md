@@ -38,6 +38,8 @@
 
 ## 開發與發布
 
+使用者未明確要求升版或發布時，保留目前版本；一般修改、測試、提交或推送不自動升版。
+
 這是獨立 Git repo，可保留在管理器的 `addons/commercetracker/` 開發。提交與推送在本目錄執行。
 
 ```powershell
@@ -48,4 +50,4 @@ python scripts/build-release.py
 
 目前自動檢查為 Lua 5.1 語法及封裝內容驗證，尚無涵蓋經商行為的回歸測試。遊戲行為需另行實測。
 
-push main／PR 會執行 CI 並保留封裝產物；完成測試並準備公開發布後，更新 manifest 版本與 changelog，再推送單一 `v<版本>` tag。workflow 會核對版本並發布 ZIP、manifest、說明及圖示。建立 repo 或通過 CI 不代表已正式發布，也不會自動加入管理器清單。
+push main／PR 會執行 CI 並保留封裝產物；使用者明確要求正式發布且完成測試後，更新 manifest 版本與 changelog，再推送單一 `v<版本>` tag。workflow 會核對版本並發布 ZIP、manifest、說明及圖示。建立 repo 或通過 CI 不代表已正式發布，也不會自動加入管理器清單。

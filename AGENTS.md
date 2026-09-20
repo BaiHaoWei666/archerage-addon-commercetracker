@@ -6,8 +6,8 @@
 # 測試與發布
 
 - 安裝 scripts/test-requirements.txt 的依賴後，執行 scripts/test.ps1；區分自動檢查與實機驗證。
-- 完成程式與測試後才調高 manifest.json 的版本並新增 changelog；已發布版本不重用。
-- 執行 python scripts/build-release.py，核對 dist 的 manifest、ZIP 內容與本機 version.txt 一致。
+- 使用者未明確要求升版或發布時，保留目前版本；一般修改、測試、提交或推送不自動升版。已發布版本不重用。
+- 升版前完成程式與測試，再更新 manifest.json 版本與 changelog；封裝時執行 python scripts/build-release.py，核對 dist 的 manifest、ZIP 內容與本機 version.txt 一致。
 - 使用遊戲 Junction 時先確認指向本目錄，再從遊戲路徑讀回 version.txt；一般安裝資料夾由安裝流程更新。
 - 封裝以 manifest 的 files 白名單為準，排除 Git、開發設定及測試資料。
 - 一般提交格式為 type: 繁體中文摘要，或 type(scope): 繁體中文摘要；版本提交固定為 chore(commercetracker): bump version to <版本號>。
