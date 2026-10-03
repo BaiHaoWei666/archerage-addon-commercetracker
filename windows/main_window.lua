@@ -1,5 +1,5 @@
 -- 主视窗（版面沿用 Folio105）
---   上方：标题、载入提示、重新整理（冷却倒数）、查价 / 停止查价、收藏、关闭
+--   上方單行：標題、載入提示、重新整理（冷卻倒數）、查價 / 停止查價、收藏、關閉
 --   中间：路线上的每个包：图示、名称、比率、售价；
 --         特产包另列「材料 x数量」与各材料成本、每包成本、每包利润
 --   下方：经商熟练度与加成、大陆 / 起始区域 / 交货区域选单
@@ -13,8 +13,8 @@ CT.MainWindow = MainWindow
 
 local WIDTH = 800
 local INITIAL_HEIGHT = 575
-local BASE_HEIGHT = 175          -- 包清单以外的高度（上方按钮列 + 下方资讯与选单）
-local LIST_TOP = 80
+local BASE_HEIGHT = 155          -- 包清單以外的高度（單行標題列 + 下方資訊與選單）
+local LIST_TOP = 60
 local LIST_LEFT = 20
 local PACK_HEIGHT = 40
 local MATERIAL_LINE_HEIGHT = 15
@@ -71,7 +71,7 @@ title:SetHeight(30)
 title:AddAnchor("TOP", window, 0, 10)
 
 local loadingLabel = UI.CreateText(window, "ctLoading", 16)
-loadingLabel:AddAnchor("TOPLEFT", window, 20, 25)
+loadingLabel:AddAnchor("TOPLEFT", window, 20, 17)
 loadingLabel.style:SetColor(0, 1, 0, 1)
 loadingLabel:SetText(T("LOADING_PRICES"))
 loadingLabel:Show(false)
@@ -83,18 +83,18 @@ closeButton:SetHandler("OnClick", function()
 end)
 
 local refreshButton = UI.CreateResetButton(window, "ctRefresh", 28)
-refreshButton:AddAnchor("TOPRIGHT", window, -190, 11)
+refreshButton:AddAnchor("TOPRIGHT", window, -245, 11)
 
 local countdownLabel = UI.CreateText(window, "ctCountdown", 16, ALIGN_CENTER)
 countdownLabel:AddAnchor("RIGHT", refreshButton, -35, 0)
 countdownLabel.style:SetColor(1, 0, 0, 1)
 countdownLabel:Show(false)
 
-local queryButton = UI.CreateTextButton(window, "ctQuery", T("QUERY_PRICES"), 120, 28)
-queryButton:AddAnchor("TOPRIGHT", window, -190, 41)
+local queryButton = UI.CreateTextButton(window, "ctQuery", T("QUERY_PRICES"), 80, 28)
+queryButton:AddAnchor("TOPRIGHT", window, -155, 11)
 
-local favoritesButton = UI.CreateTextButton(window, "ctFavoritesButton", T("FAVORITES"), 120, 28)
-favoritesButton:AddAnchor("TOPRIGHT", window, -60, 41)
+local favoritesButton = UI.CreateTextButton(window, "ctFavoritesButton", T("FAVORITES"), 80, 28)
+favoritesButton:AddAnchor("TOPRIGHT", window, -65, 11)
 
 -- ============================================
 -- 下方：熟练度与路线选单
@@ -192,7 +192,7 @@ local function Place(widget, point, x, y)
 end
 
 -- 画一个包，回传这个包占的高度
-local function LayoutPack(row, pack, y)
+local function LayoutPack(row, pack, y, waitingResult)
     UI.SetIconTexture(row.icon, pack.icon)
     Place(row.icon, "TOPLEFT", LIST_LEFT, y)
     row.icon:SetVisible(true)
@@ -204,10 +204,10 @@ local function LayoutPack(row, pack, y)
     ApplyRatioColor(row.ratio, pack.ratio)
     row.ratio:SetText(string.format("%s%%", tostring(pack.ratio)))
     Place(row.ratio, "TOPRIGHT", RATIO_RIGHT, y + 10)
-    row.ratio:Show(true)
+    row.ratio:Show(not waitingResult)
 
     local salePrice = Trade.SalePrice(pack)
-    if salePrice ~= nil then
+    if salePrice ~= nil and not waitingResult then
         UI.ShowCurrency(window, row.sale, SALE_PRICE_RIGHT, y + 10, salePrice, true)
     else
         UI.HideCurrency(row.sale)
@@ -230,11 +230,15 @@ local function LayoutPack(row, pack, y)
         HideMaterialLines(row, #pack.materials + 1)
 
         UI.ShowCurrency(window, row.packCost, SUMMARY_RIGHT, lineY + SUMMARY_OFFSET_Y, totalCost, true)
-        local profit = (salePrice or 0) - totalCost
-        local color = profit >= 0 and COLOR_PROFIT or COLOR_LOSS
-        UI.SetCurrencyColor(row.profit, color[1], color[2], color[3])
-        UI.ShowCurrency(window, row.profit, SUMMARY_RIGHT,
-            lineY + MATERIAL_LINE_HEIGHT + SUMMARY_OFFSET_Y, profit, true)
+        if waitingResult then
+            UI.HideCurrency(row.profit)
+        else
+            local profit = (salePrice or 0) - totalCost
+            local color = profit >= 0 and COLOR_PROFIT or COLOR_LOSS
+            UI.SetCurrencyColor(row.profit, color[1], color[2], color[3])
+            UI.ShowCurrency(window, row.profit, SUMMARY_RIGHT,
+                lineY + MATERIAL_LINE_HEIGHT + SUMMARY_OFFSET_Y, profit, true)
+        end
 
         height = height + #pack.materials * MATERIAL_LINE_HEIGHT + SPECIALTY_EXTRA_HEIGHT
     else
@@ -261,9 +265,10 @@ function MainWindow.Refresh()
     UpdateProfessionLabel()
 
     local packs = Trade.packs
+    local waitingResult = Trade.IsWaitingForResult()
     local y = LIST_TOP
     for index, pack in ipairs(packs) do
-        y = y + LayoutPack(EnsureRow(index), pack, y)
+        y = y + LayoutPack(EnsureRow(index), pack, y, waitingResult)
     end
     for index = #packs + 1, #rows do
         HideRow(rows[index])
@@ -275,7 +280,10 @@ function MainWindow.Refresh()
     end
     topLine:SetVisible(#packs > 0)
 
-    window:SetExtent(WIDTH, BASE_HEIGHT + (y - LIST_TOP))
+    -- 空清單與查詢等待期間保留目前高度；有品項時才依內容調整。
+    if #packs > 0 then
+        window:SetExtent(WIDTH, BASE_HEIGHT + (y - LIST_TOP))
+    end
 end
 
 -- ============================================
@@ -296,10 +304,13 @@ local function ClearPacks()
     Trade.Clear()
 end
 
-local function RequestRatio()
-    if Trade.Request() then
-        MainWindow.Refresh()
+local function RequestRatio(keepPacks)
+    -- 切換路線即使仍在冷卻，也不能保留上一條路線的品項。
+    if not keepPacks then
+        ClearPacks()
     end
+    Trade.Request(keepPacks)
+    MainWindow.Refresh()
 end
 
 -- 交货区域选单：去掉起始区域；只有一个交货区域时自动选；原本的选择不再有效就清掉
@@ -383,7 +394,9 @@ end
 -- ============================================
 -- 按钮与冷却 / 查价状态
 -- ============================================
-refreshButton:SetHandler("OnClick", RequestRatio)
+refreshButton:SetHandler("OnClick", function()
+    RequestRatio(true)
+end)
 
 queryButton:SetHandler("OnClick", function()
     if Auction.IsRunning() then

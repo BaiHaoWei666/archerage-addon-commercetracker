@@ -1,5 +1,5 @@
 -- 路线比率与包的计算
--- 流程：选好路线 → Trade.Request(from, to) → X2Store:GetSpecialtyRatioBetween
+-- 流程：選好路線 → Trade.Request(keepPacks) → X2Store:GetSpecialtyRatioBetween
 --      → 事件 SPECIALTY_RATIO_BETWEEN_INFO 回传 { { itemInfo, ratio }, ... } → 整理成 Trade.packs → 通知主视窗
 -- 每个包：
 --   特產與債券貨：itemInfo.itemType → X2Craft:GetCraftTypeByItemType → CT.SPECIALTY_CRAFTS
@@ -235,21 +235,28 @@ end
 -- ============================================
 function Trade.Clear()
     Trade.packs = {}
+    waitingResult = false
 end
 
 function Trade.IsCoolingDown()
     return Trade.cooldownMs > 0
 end
 
--- 回传是否有送出
-function Trade.Request()
+function Trade.IsWaitingForResult()
+    return waitingResult
+end
+
+-- 回傳是否送出；重新整理可保留目前路線的品項與材料，切換路線則清空。
+function Trade.Request(keepPacks)
     local route = Trade.route
     -- 同一区域互查会让游戏出错，直接略过
     if route.from == nil or route.to == nil or route.from == route.to or Trade.IsCoolingDown() then
         return false
     end
     Trade.UpdateCommerceSkill()
-    Trade.Clear()
+    if not keepPacks then
+        Trade.Clear()
+    end
     Trade.cooldownMs = COOLDOWN_MS
     waitingResult = true
     local ok, sent = pcall(function()
@@ -306,6 +313,7 @@ local function OnRatioResult(result)
     waitingResult = false
     if type(result) ~= "table" then
         CT.Chat(T("RESULT_MISSING"))
+        CT.MainWindow.Refresh()
         return
     end
     -- 回传的 key 不一定连续，照 key 排序保持固定顺序
