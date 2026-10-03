@@ -2,8 +2,8 @@
 -- 流程：选好路线 → Trade.Request(from, to) → X2Store:GetSpecialtyRatioBetween
 --      → 事件 SPECIALTY_RATIO_BETWEEN_INFO 回传 { { itemInfo, ratio }, ... } → 整理成 Trade.packs → 通知主视窗
 -- 每个包：
---   特产包：itemInfo.itemType → X2Craft:GetCraftTypeByItemType → CT.SPECIALTY_CRAFTS（配方编号 → 英文名称）
---           材料用 X2Craft:GetCraftMaterialInfo 实时读取
+--   特產與債券貨：itemInfo.itemType → X2Craft:GetCraftTypeByItemType → CT.SPECIALTY_CRAFTS
+--           材料用 X2Craft:GetCraftMaterialInfo 依各地區配方即時讀取
 --   其他包：沿用 Folio105 的名称判断（英文客户端直接用名称；中文客户端用关键字 + 起始区域编号组出英文名称）
 --   基础售价：CT.BASE_PRICES[交货区域][英文名称]
 ADDON:ImportAPI(API_TYPE.STORE.id)
@@ -36,7 +36,7 @@ Trade.commerceSkill = 0
 Trade.cooldownMs = 0
 
 local zoneNames = {}         -- { [区域编号] = 游戏语系名称 }
-local specialtyByName = {}   -- { [英文名称] = 配方编号 }
+local specialtyByName = {}   -- { [英文名稱] = 配方編號 }
 for craftType, name in pairs(CT.SPECIALTY_CRAFTS) do
     specialtyByName[name] = craftType
 end
@@ -225,7 +225,9 @@ function Trade.SalePrice(pack)
 end
 
 function Trade.CanQueryMaterial(material)
-    return not (material.itemType and CT.AUCTION_EXCLUDED_ITEMS[material.itemType])
+    -- 債券為綁定材料，與德翡納之星一樣略過拍賣查價，成本計為 0。
+    return material.name ~= T("BLUE_SALT_BOND")
+        and not (material.itemType and CT.AUCTION_EXCLUDED_ITEMS[material.itemType])
 end
 
 -- ============================================

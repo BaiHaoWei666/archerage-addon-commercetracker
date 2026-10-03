@@ -1,6 +1,6 @@
--- 特产配方：{ [配方编号] = 英文名称 }（取自 globals/craftids.lua 中名称含 "Specialty" 的配方）
--- 用途：路线上的特产包 → GetCraftTypeByItemType → 这里的英文名称 → data/prices.lua 的基础售价；
---       材料一律用 X2Craft:GetCraftMaterialInfo 实时读取。游戏新增特产地区时补进来。
+-- 特產與債券貨配方：{ [配方編號] = 英文名稱 }（取自 globals/craftids.lua）
+-- 用途：路線上的特產包 → GetCraftTypeByItemType → 這裡的英文名稱 → data/prices.lua 的基礎售價；
+--       各地區材料均用 X2Craft:GetCraftMaterialInfo 即時讀取。遊戲新增特產地區時補進來。
 CT.SPECIALTY_CRAFTS = {
     [11566] = "Aegis Coastal Fertilizer Specialty",
     [11559] = "Aegis Coastal Gilda Specialty",
@@ -133,4 +133,16 @@ CT.SPECIALTY_CRAFTS = {
     [6223] = "Ynystere Commercial Gilda Specialty",
     [9617] = "Ynystere Commercial Local Specialty",
     [6246] = "Ynystere Commercial Specialty",
+
+    -- 各地區債券貨，沿用既有價格表名稱。
+    [11035] = "Mahadevi Pack",
+    [11036] = "Silent Forest Pack",
+    [11037] = "Falcorth Pack",
+    [11038] = "Lilyut Pack",
+    [11039] = "Gweonid Pack",
+    [11040] = "Marianople Pack",
+    [11041] = "White Arden Pack",
+    [11042] = "Ynystere Pack",
+    [11043] = "Cinderstone Pack",
+    [11044] = "Perinoor Pack",
 }

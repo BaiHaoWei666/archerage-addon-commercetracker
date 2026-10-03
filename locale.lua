@@ -24,6 +24,9 @@ if isCN then
     texts.COMMERCE_INFO = "经商熟练度: %d      加成: +%.2f%%"
     texts.MATERIAL_LINE = "%s x%d"
 
+    -- 債券貨的綁定材料
+    texts.BLUE_SALT_BOND = "蓝盐商会债券证书"
+
     -- 收藏
     texts.FAVORITES = "收藏"
     texts.FAVORITES_TITLE = "收藏路线"
@@ -51,6 +54,9 @@ else
     texts.LOADING_PRICES = "Prices Are Loading"
     texts.COMMERCE_INFO = "Commerce: %d      Bonus: +%.2f%%"
     texts.MATERIAL_LINE = "%s x%d"
+
+    -- 債券貨的綁定材料
+    texts.BLUE_SALT_BOND = "Blue Salt Brotherhood Bond"
 
     -- Favorites
     texts.FAVORITES = "Favorites"
