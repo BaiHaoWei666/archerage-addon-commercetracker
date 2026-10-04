@@ -18,6 +18,8 @@ local LIST_TOP = 60
 local LIST_LEFT = 20
 local PACK_HEIGHT = 40
 local MATERIAL_LINE_HEIGHT = 15
+local MATERIAL_TEXT_WIDTH = 210
+local MATERIAL_SEARCH_GAP = 4
 local SPECIALTY_EXTRA_HEIGHT = 10
 local ICON_SIZE = 35
 local TEXT_LEFT = LIST_LEFT + 50            -- 包名、材料的 x
@@ -56,6 +58,7 @@ local window = CreateEmptyWindow("ctMainWindow", "UIParent")
 window:SetExtent(WIDTH, INITIAL_HEIGHT)
 window:AddAnchor("CENTER", "UIParent", 0, 0)
 window:SetCloseOnEscape(true)
+window:Clickable(true)
 window:EnableDrag(true)
 window:SetHandler("OnDragStart", function(self)
     self:StartMoving()
@@ -131,9 +134,25 @@ local function EnsureMaterialLine(row, index)
     end
     local id = row.id .. "Mat" .. index
     line = {
+        hitArea = window:CreateChildWidget("emptywidget", id .. "HitArea", 0, true),
         label = UI.CreateText(window, id, 12),
         cost = UI.CreateCurrency(window, id .. "Cost", 12),
+        searchButton = UI.CreateSearchButton(window, id .. "Search", MATERIAL_LINE_HEIGHT),
     }
+    -- 材料文字使用固定欄寬，讓每列搜尋按鈕對齊欄位右緣。
+    line.label:SetAutoResize(false)
+    line.hitArea:Clickable(true)
+    line.hitArea:SetHandler("OnClick", function(_, button, doubleClick)
+        if button == "LeftButton" and doubleClick == true and line.material ~= nil then
+            Auction.SearchMaterial(line.material)
+        end
+    end)
+    line.searchButton:AddAnchor("LEFT", line.label, "RIGHT", MATERIAL_SEARCH_GAP, 0)
+    line.searchButton:SetHandler("OnClick", function(_, button, doubleClick)
+        if button == "LeftButton" and doubleClick ~= true and line.material ~= nil then
+            Auction.SearchMaterial(line.material)
+        end
+    end)
     line.label.style:SetColor(COLOR_MATERIAL[1], COLOR_MATERIAL[2], COLOR_MATERIAL[3], 1)
     UI.SetCurrencyColor(line.cost, COLOR_COST[1], COLOR_COST[2], COLOR_COST[3])
     row.materials[index] = line
@@ -161,7 +180,11 @@ end
 
 local function HideMaterialLines(row, fromIndex)
     for index = fromIndex, #row.materials do
+        row.materials[index].material = nil
+        row.materials[index].hitArea:EnablePick(false)
+        row.materials[index].hitArea:Show(false)
         row.materials[index].label:Show(false)
+        row.materials[index].searchButton:Show(false)
         UI.HideCurrency(row.materials[index].cost)
     end
 end
@@ -221,9 +244,21 @@ local function LayoutPack(row, pack, y, waitingResult)
             local cost = material.amount * Auction.PriceOf(material)
             totalCost = totalCost + cost
             local line = EnsureMaterialLine(row, index)
-            line.label:SetText(string.format(T("MATERIAL_LINE"), material.name, material.amount))
-            Place(line.label, "TOPLEFT", TEXT_LEFT, lineY)
+            line.material = Trade.CanQueryMaterial(material) and material or nil
+            line.hitArea:EnablePick(line.material ~= nil)
+            local text = string.format(T("MATERIAL_LINE"), material.name, material.amount)
+            line.label:SetText(text)
+            line.label:SetExtent(MATERIAL_TEXT_WIDTH, MATERIAL_LINE_HEIGHT)
+            line.label:RemoveAllAnchors()
+            line.label:AddAnchor("LEFT", window, "TOPLEFT", TEXT_LEFT, lineY)
+            line.hitArea:SetExtent(WIDTH - LIST_LEFT - TEXT_LEFT, MATERIAL_LINE_HEIGHT)
+            line.hitArea:RemoveAllAnchors()
+            line.hitArea:AddAnchor("LEFT", window, "TOPLEFT", TEXT_LEFT, lineY)
+            line.hitArea:Show(true)
             line.label:Show(true)
+            line.searchButton:Show(line.material ~= nil)
+            -- 按鈕位於整列感應區上方，確保它能收到單擊。
+            line.searchButton:Raise()
             UI.ShowCurrency(window, line.cost, MATERIAL_COST_RIGHT, lineY, cost, true)
             lineY = lineY + MATERIAL_LINE_HEIGHT
         end

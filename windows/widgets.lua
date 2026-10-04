@@ -85,6 +85,25 @@ function UI.CreateResetButton(parent, id, size)
     return button
 end
 
+function UI.CreateSearchButton(parent, id, size)
+    local button = parent:CreateChildWidget("button", id, 0, true)
+    button:SetExtent(size, size)
+    local skins = {
+        { key = "btn_view_normal", setter = "SetNormalBackground" },
+        { key = "btn_view_highlighted", setter = "SetHighlightBackground" },
+        { key = "btn_view_pushed", setter = "SetPushedBackground" },
+        { key = "btn_view_disabled", setter = "SetDisabledBackground" },
+    }
+    for _, skin in ipairs(skins) do
+        local drawable = button:CreateDrawable("ui/button/common/reading_glasses.dds", skin.key, "background")
+        drawable:AddAnchor("TOPLEFT", button, 0, 0)
+        drawable:AddAnchor("BOTTOMRIGHT", button, 0, 0)
+        button[skin.setter](button, drawable)
+    end
+    button:Show(false)
+    return button
+end
+
 function UI.CreateIcon(parent, path, width, height)
     local icon = parent:CreateIconDrawable("artwork")
     icon:SetExtent(width, height)

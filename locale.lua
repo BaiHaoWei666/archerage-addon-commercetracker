@@ -9,6 +9,8 @@ if isCN then
     texts.LOADED = "[经商追踪] 已载入"
     texts.REQUEST_FAILED = "[经商追踪] 路线比率查询没有送出"
     texts.RESULT_MISSING = "[经商追踪] 没有收到路线比率资料"
+    texts.AUCTION_OPEN_FAILED = "[经商追踪] 无法打开拍卖行"
+    texts.AUCTION_SEARCH_FAILED = "[经商追踪] 拍卖行搜索失败"
 
     -- 主视窗
     texts.CONTINENT_LABEL = "大陆:"
@@ -40,6 +42,8 @@ else
     texts.LOADED = "[Commerce Tracker] Loaded"
     texts.REQUEST_FAILED = "[Commerce Tracker] Route ratio request was not sent"
     texts.RESULT_MISSING = "[Commerce Tracker] Route ratio data is missing"
+    texts.AUCTION_OPEN_FAILED = "[Commerce Tracker] Could not open the Auction House"
+    texts.AUCTION_SEARCH_FAILED = "[Commerce Tracker] Auction House search failed"
 
     -- Main window
     texts.CONTINENT_LABEL = "Continent:"

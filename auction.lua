@@ -7,12 +7,16 @@ local Auction = {}
 CT.Auction = Auction
 
 local THROTTLE_MS = 1200
+-- 拍賣場開啟時可能重設查詢，待視窗初始化後再搜尋材料。
+local SEARCH_DELAY_MS = 300
 
 local prices = {}       -- { [材料 key] = 单价（铜） }
 local queue = {}        -- { material, ... }
 local active = nil      -- 已送出、等待结果的材料
 local running = false
 local waitMs = 0
+local pendingName = nil
+local searchDelayMs = 0
 
 -- 有物品编号就用编号，没有才用名称
 local function KeyOf(material)
@@ -36,9 +40,27 @@ local function Finish()
 end
 
 function Auction.Cancel()
+    pendingName = nil
     if running then
         Finish()
     end
+end
+
+function Auction.SearchMaterial(material)
+    if not CT.Trade.CanQueryMaterial(material) then
+        return
+    end
+    -- 停止批次查價，避免後續查詢覆蓋手動搜尋或誤收其結果。
+    Auction.Cancel()
+    local ok = pcall(function()
+        ADDON:ShowContent(UIC_AUCTION, true)
+    end)
+    if not ok then
+        CT.Chat(CT.Text("AUCTION_OPEN_FAILED"))
+        return
+    end
+    pendingName = material.name
+    searchDelayMs = SEARCH_DELAY_MS
 end
 
 local function SendNext()
@@ -60,6 +82,7 @@ end
 
 -- 查询目前路线所有特产包的材料（非卖品除外）
 function Auction.StartForPacks(packs)
+    pendingName = nil
     prices = {}
     queue = {}
     active = nil
@@ -85,10 +108,26 @@ function Auction.StartForPacks(packs)
 end
 
 function Auction.Tick(dt)
+    local elapsed = tonumber(dt) or 0
+    if pendingName ~= nil then
+        searchDelayMs = searchDelayMs - elapsed
+        if searchDelayMs <= 0 then
+            -- 等待期間再次選取材料，只搜尋最後一次選取的名稱。
+            local name = pendingName
+            pendingName = nil
+            local ok = pcall(function()
+                X2Auction:SearchAuctionArticle(1, 0, 999, 1, 0, false, name, "0", "0")
+            end)
+            if not ok then
+                CT.Chat(CT.Text("AUCTION_SEARCH_FAILED"))
+            end
+        end
+        return
+    end
     if not running then
         return
     end
-    waitMs = waitMs - (tonumber(dt) or 0)
+    waitMs = waitMs - elapsed
     if waitMs <= 0 then
         SendNext()
     end
