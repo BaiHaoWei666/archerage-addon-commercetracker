@@ -40,4 +40,12 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
-        run: gh release create "$GITHUB_REF_NAME" dist/* --verify-tag --title "$GITHUB_REF_NAME" --generate-notes
+        run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          manifest = json.loads(Path("dist/manifest.json").read_text(encoding="utf-8"))
+          entry = next(item for item in manifest["changelog"] if item["version"] == manifest["version"])
+          Path("release-notes.md").write_text("\n".join("- " + note for note in entry["notes"]) + "\n", encoding="utf-8")
+          PY
+          gh release create "$GITHUB_REF_NAME" dist/* --verify-tag --title "$GITHUB_REF_NAME" --notes-file release-notes.md
