@@ -13,7 +13,7 @@ CT.MainWindow = MainWindow
 
 local WIDTH = 800
 local INITIAL_HEIGHT = 575
-local BASE_HEIGHT = 155          -- 包清單以外的高度（單行標題列 + 下方資訊與選單）
+local BASE_HEIGHT = 130          -- 包清單以外的高度（單行標題列 + 下方資訊與選單）
 local LIST_TOP = 60
 local LIST_LEFT = 20
 local PACK_HEIGHT = 40
