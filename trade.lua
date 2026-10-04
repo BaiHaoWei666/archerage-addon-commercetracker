@@ -16,9 +16,6 @@ local T = CT.Text
 local Trade = {}
 CT.Trade = Trade
 
--- 临时诊断：第一次收到路线资料时，把第一个包的栏位与配方对应印到聊天框，确认后删除
-local DEBUG_DUMP = true
-
 local COOLDOWN_MS = 5200            -- 路线比率查询的冷却
 local COMMERCE_BONUS_PER_POINT = 0.05 / 10000
 
@@ -277,35 +274,6 @@ function Trade.Tick(dt)
     end
 end
 
-local function DumpFirstPack(entries)
-    if not DEBUG_DUMP then
-        return
-    end
-    DEBUG_DUMP = false
-    local entry = entries[1]
-    local itemInfo = entry and entry.itemInfo
-    if type(itemInfo) ~= "table" then
-        CT.Chat("[CT debug] no itemInfo")
-        return
-    end
-    local parts = {}
-    for key, value in pairs(itemInfo) do
-        if type(value) ~= "table" and key ~= "description" then
-            parts[#parts + 1] = tostring(key) .. "=" .. tostring(value)
-        end
-    end
-    table.sort(parts)
-    CT.Chat("[CT debug] ratio=" .. tostring(entry.ratio) .. " " .. table.concat(parts, ", "))
-    for _, e in ipairs(entries) do
-        local pack = e.itemInfo and AnalyzePack(e, Trade.route.from, Trade.route.to)
-        if pack then
-            CT.Chat(string.format("[CT debug] %s -> craft=%s en=%s base=%s mats=%d",
-                tostring(pack.name), tostring(pack.craftType), tostring(pack.canonicalName),
-                tostring(pack.basePrice), #pack.materials))
-        end
-    end
-end
-
 local function OnRatioResult(result)
     if not waitingResult then
         return   -- 其他插件（例如 Folio105）送出的查询
@@ -334,7 +302,6 @@ local function OnRatioResult(result)
     for _, key in ipairs(keys) do
         entries[#entries + 1] = result[key]
     end
-    DumpFirstPack(entries)
 
     local packs = {}
     for _, entry in ipairs(entries) do
