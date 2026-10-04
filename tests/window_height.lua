@@ -45,6 +45,7 @@ function Widget:EnablePick(enabled) self.pickEnabled = enabled end
 function Widget:IsVisible()
     return self.visible and (self.parent == nil or self.parent:IsVisible())
 end
+function Widget:IsMouseOver() return self.mouseOver == true end
 function Widget:SetVisible(visible) self.visible = visible end
 -- 繪製寬度刻意與字型估算不同，避免測試只重複驗證同一個估算公式。
 function Widget:SetText(text)
@@ -80,6 +81,11 @@ function Widget:CreateChildWidget(kind, id)
     return widget
 end
 function Widget:CreateDrawable() return NewWidget() end
+function Widget:CreateColorDrawable()
+    local drawable = NewWidget()
+    drawable.parent = self
+    return drawable
+end
 
 CreateEmptyWindow, SettingWindowSkin = NewWidget, Noop
 ALIGN_CENTER, ALIGN_RIGHT = 1, 2
@@ -333,7 +339,7 @@ for _, material in ipairs({
 }) do
     pack.materials = { material }
     CT.MainWindow.Refresh()
-    assert(not hitArea.pickEnabled, "不可交易材料應停用點擊")
+    assert(hitArea.pickEnabled, "不可交易材料仍應接收滑鼠以顯示懸停高亮")
     Click("LeftButton", true)
     assert(#materialSearches == 2, "不可交易材料不應搜尋")
 end

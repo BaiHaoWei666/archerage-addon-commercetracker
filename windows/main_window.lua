@@ -127,6 +127,13 @@ local rows = {}
 local topLine = UI.CreateLine(window, WIDTH - LINE_LEFT * 2, 3)
 topLine:SetVisible(false)
 
+local function UpdateMaterialHighlight(line)
+    local hovered = line.hitArea:IsVisible()
+        and (line.hitArea:IsMouseOver()
+            or (line.searchButton:IsVisible() and line.searchButton:IsMouseOver()))
+    line.highlight:SetVisible(hovered)
+end
+
 local function EnsureMaterialLine(row, index)
     local line = row.materials[index]
     if line ~= nil then
@@ -139,6 +146,10 @@ local function EnsureMaterialLine(row, index)
         cost = UI.CreateCurrency(window, id .. "Cost", 12),
         searchButton = UI.CreateSearchButton(window, id .. "Search", MATERIAL_LINE_HEIGHT),
     }
+    line.highlight = line.hitArea:CreateColorDrawable(0.6, 0.7, 1.0, 0.12, "background")
+    line.highlight:AddAnchor("TOPLEFT", line.hitArea, 0, 0)
+    line.highlight:AddAnchor("BOTTOMRIGHT", line.hitArea, 0, 0)
+    line.highlight:SetVisible(false)
     -- 材料文字使用固定欄寬，讓每列搜尋按鈕對齊欄位右緣。
     line.label:SetAutoResize(false)
     line.hitArea:Clickable(true)
@@ -181,6 +192,7 @@ end
 local function HideMaterialLines(row, fromIndex)
     for index = fromIndex, #row.materials do
         row.materials[index].material = nil
+        row.materials[index].highlight:SetVisible(false)
         row.materials[index].hitArea:EnablePick(false)
         row.materials[index].hitArea:Show(false)
         row.materials[index].label:Show(false)
@@ -245,7 +257,7 @@ local function LayoutPack(row, pack, y, waitingResult)
             totalCost = totalCost + cost
             local line = EnsureMaterialLine(row, index)
             line.material = Trade.CanQueryMaterial(material) and material or nil
-            line.hitArea:EnablePick(line.material ~= nil)
+            line.hitArea:EnablePick(true)
             local text = string.format(T("MATERIAL_LINE"), material.name, material.amount)
             line.label:SetText(text)
             line.label:SetExtent(MATERIAL_TEXT_WIDTH, MATERIAL_LINE_HEIGHT)
@@ -259,6 +271,7 @@ local function LayoutPack(row, pack, y, waitingResult)
             line.searchButton:Show(line.material ~= nil)
             -- 按鈕位於整列感應區上方，確保它能收到單擊。
             line.searchButton:Raise()
+            UpdateMaterialHighlight(line)
             UI.ShowCurrency(window, line.cost, MATERIAL_COST_RIGHT, lineY, cost, true)
             lineY = lineY + MATERIAL_LINE_HEIGHT
         end
@@ -458,6 +471,14 @@ function MainWindow.OnAuctionStateChanged()
 end
 
 function MainWindow.Tick(dt)
+    if window:IsVisible() then
+        -- 同時檢查材料列與按鈕，讓游標移到放大鏡時維持整列高亮。
+        for _, row in ipairs(rows) do
+            for _, line in ipairs(row.materials) do
+                UpdateMaterialHighlight(line)
+            end
+        end
+    end
     -- 冷却中停用重新整理与选单，右边显示剩余秒数
     local coolingDown = Trade.IsCoolingDown()
     refreshButton:Enable(not coolingDown)
